@@ -1,0 +1,24 @@
+{
+  "name": "scaffoldproject",
+  "version": "0.0.0",
+  "description": "A scaffolding for a standard ADS project with optional features like routing or backend flavor ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ADSMedienmanufaktur/scaffoldProject.git"
+  },
+  "keywords": [
+    "ADS",
+    "scaffolding",
+    "cli"
+  ],
+  "author": "ADS Medienmanufaktur",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ADSMedienmanufaktur/scaffoldProject/issues"
+  },
+  "homepage": "https://github.com/ADSMedienmanufaktur/scaffoldProject#readme"
+}
