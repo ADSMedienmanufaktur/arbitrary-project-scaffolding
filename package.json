@@ -2,13 +2,13 @@
   "name": "arbitrary-project-scaffolding",
   "version": "0.0.1",
   "description": "A scaffolding for an arbitrary project with optional features like routing or backend flavor",
-  "main": "lib/cli.js",
+  "main": "./bin/cli.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "bin": {
     "aps": "./bin/cli.js",
