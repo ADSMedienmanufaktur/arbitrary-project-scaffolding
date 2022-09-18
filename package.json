@@ -20,7 +20,10 @@
     "url": "git+https://github.com/ADSMedienmanufaktur/scaffoldProject.git"
   },
   "keywords": [
-    "ADS",
+    "template",
+	"git",
+	"clone",
+	"generate",
     "scaffolding",
     "cli"
   ],
