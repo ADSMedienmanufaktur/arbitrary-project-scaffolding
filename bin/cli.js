@@ -1,11 +1,13 @@
+#!/usr/bin/env node
 import * as packageJson from '../package.json' assert { type: 'json' };
 import {program} from 'commander'
-import {change,list,init} from "../commands.js";
+import {change, list, init, initializeTemplates, updateTemplates} from "../commands.js";
 
 program.usage('<command>')
-
 program.version(packageJson.version)
-
+program.hook('preAction',(thisCommand, actionCommand)=>{
+	initializeTemplates()
+})
 program
 .command('add')
 .description('Add a new template')
@@ -30,5 +32,10 @@ program
 .command('init')
 .description('Init or embed a project')
 .action(() => {init()})
+
+program
+.command('update')
+.description('Update the internal templates.json')
+.action(() => {updateTemplates()})
 
 program.parse(process.argv)

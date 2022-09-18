@@ -6,9 +6,10 @@ import download from 'download-git-repo'
 import ora from "ora";
 import inquirer from "inquirer";
 import logSymbols from "log-symbols";
-import templateList from "./templates.json" assert { type: 'json' }
+import axios from 'axios'
 
 export function change(type){
+	const templateList=getTemplates()
 	const questions=[{
 		name: 'name',
 		type: 'input',
@@ -61,7 +62,6 @@ export function change(type){
 				description:sanitize(description)
 			}
 		}
-		console.log(type,answers,templateList);
 		fs.writeFile(`templates.json`, JSON.stringify(templateList), 'utf-8', (err) => {
 			if (err) console.log(chalk.red(logSymbols.error), chalk.red(err))
 			console.log('\n')
@@ -72,15 +72,15 @@ export function change(type){
 	})
 }
 
-export function list(){showTable(templateList)}
+export function list(){showTable(getTemplates())}
 
 export function init(){
-	const currentDir=process.cwd()
+	const templateList=getTemplates()
 	const questions=[{
 		name:'directory',
 		type:'input',
 		message:'Please enter a directory to save the project (strings starting without a / will be treated as relative to the current directory)',
-		default:currentDir
+		default:process.cwd()
 	},{
 		name:'templates',
 		type:'checkbox',
@@ -94,15 +94,12 @@ export function init(){
 	inquirer.prompt(questions).then(answers=>{
 		const {directory,templates}=answers
 		templates.forEach(name=>{
-			const isAbsolutePath=PATH.isAbsolute(directory)
-			const path=isAbsolutePath ? directory : PATH.join(currentDir,directory)
+			const path=checkFile(directory)
 			const url=templateList[name].url
-			console.log(chalk.green('\n Start generating... \n'))
 			const spinner = ora('Downloading...')
+			console.log(chalk.green('\n Start generating... \n'))
 			spinner.start()
-
 			download(`direct:${url}`, path, {clone: true}, (err) => {
-				console.log();
 				if (err && err.message!==`'git checkout' failed with status 1`) {
 					spinner.fail()
 					console.log(chalk.red(logSymbols.error), chalk.red(`Generation failed. ${err}`))
@@ -117,6 +114,89 @@ export function init(){
 		})
 	})
 }
+
+export function updateTemplates(){
+	const questions=[{
+		name:'type',
+		type:'list',
+		message:'Please choose where to find your templates',
+		choices:[{
+			name:'Remotely via URL',
+			value:'remote'
+		},{
+			name:'Locally in a file',
+			value:'local'
+		}]
+	},{
+		name:'location',
+		type:'input',
+		message:({type})=>{
+			if(type==='remote') return 'Please enter the URL to pull your templates from'
+			else return 'Please enter the file path to your templates JSON file (paths starting without a / will be treated as relative tu the current working directory)'
+		},
+		validate(location, {type}) {
+			if(location==='') return 'A location is required!'
+			else if(type==='remote')
+				return location.startsWith('http') ? true : 'URL must user either HTTP or HTTPS protocol!'
+			else if(type==='local'){
+				const {isValid}=checkFile(location)
+				return isValid ? true : 'File mus be a valid JSON or a directory!'
+			}
+			return true
+		}
+	}]
+
+	inquirer.prompt(questions).then(async answers=>{
+		const {type,location}=answers
+		const spinner = ora('Downloading...')
+		console.log(chalk.green('\n Starting to fetch... \n'))
+		spinner.start()
+		let template={}
+		if(type==='local'){
+			const {path,isDir}=checkFile(location)
+			if(isDir){
+				fs.readdirSync(path).forEach(fileName=>{
+					if(PATH.extname(fileName)==='.json'){
+						template={...template,...JSON.parse(fs.readFileSync(PATH.join(path,fileName)))}
+					}
+				})
+			}
+			else if(PATH.extname(path)==='.json'){
+				template={...template,...JSON.parse(fs.readFileSync(path))}
+			}
+		}
+		else{
+			const data=(await axios.get(location)).data
+			template={...template,...data}
+		}
+		fs.writeFile('./templates.json',JSON.stringify(template),'utf-8',(err)=>{
+			if(err){
+				spinner.fail()
+				console.log(chalk.red(logSymbols.error), chalk.red(`Merge failed. ${err}`))
+				return
+			}
+			spinner.succeed()
+			console.log(chalk.green('\n Finished merging the templates! \n'))
+			console.log(chalk.green('The new template list is:'))
+			showTable()
+		})
+	})
+}
+
+export function initializeTemplates(){
+	if(!fs.existsSync('./templates.json')){
+		try {
+			fs.writeFileSync(`templates.json`, "{}", 'utf-8')
+			console.log(chalk.green('templates.json created successfully!'))
+		}
+		catch (err) {
+			console.log(chalk.red(logSymbols.error), chalk.red(err))
+			process.exit(1)
+
+		}
+	}
+}
+
 const table = new Table({
 	head: ['name','description','url'],
 	style: {
@@ -124,6 +204,7 @@ const table = new Table({
 	}
 })
 function showTable(){
+	const templateList=getTemplates()
 	const list = Object.keys(templateList)
 	if (list.length === 0) {
 		console.log(table.toString())
@@ -142,4 +223,18 @@ function showTable(){
 }
 function sanitize(str){
 	return str.replaceAll(/ [\u0000-\u0019] /g, '')
+}
+
+function getTemplates(){
+	initializeTemplates()
+	return JSON.parse(fs.readFileSync('./templates.json','utf-8'))
+}
+
+function checkFile(directory){
+	const isAbsolutePath=PATH.isAbsolute(directory)
+	const path=isAbsolutePath ? directory : PATH.join(process.cwd(),directory)
+	const isDir=fs.existsSync(path) && fs.lstatSync(path).isDirectory()
+	console.log(PATH.extname(path));
+	const isValid=isDir || PATH.extname(path)==='.json'
+	return {path,isDir,isValid}
 }
