@@ -124,7 +124,7 @@ export function updateTemplates(){
 			name:'Remotely via URL',
 			value:'remote'
 		},{
-			name:'Locally in a file',
+			name:'Locally in a file/directory',
 			value:'local'
 		}]
 	},{
