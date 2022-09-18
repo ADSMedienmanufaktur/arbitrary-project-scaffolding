@@ -1,5 +1,5 @@
 {
-  "name": "arbitrary-project-scaffolding",
+  "name": "@ads-medienmanufaktur/arbitrary-project-scaffolding",
   "version": "0.0.1",
   "description": "A scaffolding for an arbitrary project with optional features like routing or backend flavor",
   "main": "./bin/cli.js",
