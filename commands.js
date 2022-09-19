@@ -79,7 +79,7 @@ export function init(){
 	const questions=[{
 		name:'directory',
 		type:'input',
-		message:'Please enter a directory to save the project (strings starting without a / will be treated as relative to the current directory)',
+		message:'Please enter a base directory to save the template(s) (each template will be stored in a subdirectory)',
 		default:process.cwd()
 	},{
 		name:'templates',
@@ -89,17 +89,32 @@ export function init(){
 			if (val.length===0) return 'At least one template is required'
 			return true
 		}
-	}]
+	},/*{
+		name:'clone',
+		type:'list',
+		message:({templates})=>{
+			const isSingle=templates.length===1
+			const template=`template${isSingle ? 's' : ''}`
+			return `How Do you want to download the ${template}?`
+		},
+		choices:[{
+			name:'GIT Clone',
+			value:true
+		},{
+			name:'Download',
+			value:false
+		}]
+	}*/]
 
 	inquirer.prompt(questions).then(answers=>{
-		const {directory,templates}=answers
+		const {directory,templates,clone=true}=answers
 		templates.forEach(name=>{
-			const path=checkFile(directory)
+			const {path}=checkFile(PATH.join(directory,name))
 			const url=templateList[name].url
 			const spinner = ora('Downloading...')
 			console.log(chalk.green('\n Start generating... \n'))
 			spinner.start()
-			download(`direct:${url}`, path, {clone: true}, (err) => {
+			download(`direct:${url}`, path, {clone}, (err) => {
 				if (err && err.message!==`'git checkout' failed with status 1`) {
 					spinner.fail()
 					console.log(chalk.red(logSymbols.error), chalk.red(`Generation failed. ${err}`))
@@ -108,7 +123,7 @@ export function init(){
 				spinner.succeed()
 				console.log(chalk.green(logSymbols.success), chalk.green('Generation completed!'))
 				console.log('\n To get started')
-				console.log(`\n    1. cd ${directory}`)
+				console.log(`\n    1. cd ${path}`)
 				console.log(`    2. (p)npm i to install all dependencies \n`)
 			})
 		})
@@ -147,7 +162,7 @@ export function updateTemplates(){
 	}]
 
 	inquirer.prompt(questions).then(async answers=>{
-		const {type,location}=answers
+		const {type,location,clone}=answers
 		const spinner = ora('Downloading...')
 		console.log(chalk.green('\n Starting to fetch... \n'))
 		spinner.start()
