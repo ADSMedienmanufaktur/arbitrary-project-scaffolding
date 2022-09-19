@@ -26,8 +26,7 @@ help [command]  display help for command
 The CLI provides 4 basic commands to add, edit, update, delete and list templates from an internally maintained JSON file. Each template consists of an optional description and a repository url to pull it from. When running the init command you will be able to choose from the existing templates and where to clone them to.
 
 ## Templates
-On first command execution a ```templates.json``` file will be created. This is used to store your individual project templates. Through the ```update``` command you can inject your own templates.json to be merged with the already added templates. Your own ```templates.json``` has to follow the structure: ```{[TEMPLATEKEY]:{url:...,description:...}}```.
-**For the moment your template can only be loaded from a URL.**
+On first command execution a ```templates.json``` file will be created. This is used to store your individual project templates. Through the ```update``` command you can inject your own templates.json to be merged with the already added templates. The to be merged JSON file/files have to follow the structure: ```{[TEMPLATEKEY]:{url:...,description:...}}```. When provoding a directory as a path All *.json files will be merged into the Internal ```templates.json```.
 
 ## Notes
 You might see an experimental warning when executing any CLI command. This can safely be ignored as it is due to NodeJS being used as aa ESM module (see [nodejs.org#import-assertions](https://nodejs.org/api/esm.html#import-assertions))
